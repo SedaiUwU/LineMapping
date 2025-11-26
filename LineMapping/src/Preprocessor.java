@@ -55,12 +55,12 @@ public class Preprocessor {
         return fixedLines;
     }
 
-    //checks if the line is empty or if it only contains spaces
+    //checks if the line is empty and if it only contains spaces
     public boolean isLineEmpty(String line) {
         if (line == null) { //checks if line is null/empty
             return true;
         }
         String trimmed = line.trim(); //trims the lines and checks if the the fixed line has any value remained in it
-        return trimmed.length() == 0;
+        return trimmed.length() == 0; 
     }
 }
