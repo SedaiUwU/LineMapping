@@ -1,4 +1,4 @@
-package linemapping.algo;
+package linemapping.main;
 public class Test {
 //abdullah :3 edit asd 
 //sriram edit
