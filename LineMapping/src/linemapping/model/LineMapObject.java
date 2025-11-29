@@ -8,25 +8,31 @@ import java.util.Map;
 
 public class LineMapObject {
     
-
     private List<String> rawLines;
     private Map<Integer, List<Integer>> lookupMap;
 
     public LineMapObject(String fileDir) {
+
         lookupMap = new HashMap<>();
         rawLines = LinemapConstructor.FiletoList(fileDir);
-        
+
+        Preprocessor pre = new Preprocessor(); 
+        //we must run the pre processing here in line mapping, not in the file reader
+
         for (int i = 0; i < rawLines.size(); i++) {
+
             String lineContent = rawLines.get(i);
-            
-            //we must run the pre processing first to remove white spaces
-            int hash = lineContent.hashCode(); 
-            
+
+            String fixed = pre.fixLine(lineContent);  
+            //this creates the new cleaned version that will be used for hashing
+
+            int hash = fixed.hashCode(); 
+            //this is our new hash after preprocessing is applied
+
             if (!lookupMap.containsKey(hash)) {
                 lookupMap.put(hash, new ArrayList<>());
             }
-            
-            //adds i to the list of numbers found 
+
             lookupMap.get(hash).add(i);
         }
     }
