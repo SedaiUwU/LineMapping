@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LineMappingEngine {
+public class LineMappingProcess {
 
     private LineMapObject leftFile;
     private LineMapObject rightFile;
@@ -15,7 +15,7 @@ public class LineMappingEngine {
     private List<Integer> changedLeft;
     private List<Integer> changedRight;
 
-    public LineMappingEngine(LineMapObject left, LineMapObject right) {
+    public LineMappingProcess(LineMapObject left, LineMapObject right) {
         this.leftFile = left;
         this.rightFile = right;
 
