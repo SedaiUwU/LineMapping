@@ -2,96 +2,116 @@ package linemapping.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import linemapping.model.LineMapObject;
+import linemapping.model.Preprocessor;
 
 public class DetectUnchangedLines {
 
-	private LineMapObject leftFile;
-	private LineMapObject rightFile;
+    private LineMapObject leftFile;
+    private LineMapObject rightFile;
 
-	private int[][] unchangedLinesarray;/////
-	private Map<Integer, Integer> unchangedLines;
-	private List<Integer> changedLeft;
-	private List<Integer> changedRight;
+    private Map<Integer, Integer> unchangedLines;
+    private List<Integer> changedLeft;
+    private List<Integer> changedRight;
 
-	public DetectUnchangedLines(LineMapObject left, LineMapObject right) {
-		this.leftFile = left;
-		this.rightFile = right;
+    public DetectUnchangedLines(LineMapObject left, LineMapObject right) {
+        this.leftFile = left;
+        this.rightFile = right;
 
-		unchangedLinesarray = new int[][]; /////
+        unchangedLines = new HashMap<>();
+        changedLeft = new ArrayList<>();
+        changedRight = new ArrayList<>();
+    }
+    
+    // here we detect the unchanged lines
+    public void findUnchanged() {
 
-		unchangedLines = new HashMap<>();
-		changedLeft = new ArrayList<>();
-		changedRight = new ArrayList<>();
-	}
+        Preprocessor pre = new Preprocessor();
 
-	// here we first detect the unchanged lines
-	public void findUnchanged() {
+        for (int i = 0; i < leftFile.GetSize(); i++) {
 
-		for (int i = 0; i < leftFile.GetSize(); i++) {
+            String leftText = leftFile.GetLineString(i);
+            if (leftText == null) {
+                changedLeft.add(i);
+                continue;
+            }
 
-			String leftText = leftFile.GetLineString(i);
-			if (leftText == null) {
-				continue;
-			}
+            // using preprocessed hash
+            int leftHash = pre.fixLine(leftText).hashCode();
 
-			int hash = leftText.hashCode();
-			List<Integer> matchList = rightFile.GetIndices(hash);
-			
-			
-			//add error checking for situations when checking if a line exists before you use it as a variable
-			
-			
-			if (matchList.isEmpty()) {
-				changedLeft.add(i);
-			} else {
-				int finalConfidence = 0;
-				int matched = 0;
-				for (int j = 0; j < matchList.size(); j++) {
-					int confidenceValue = 0;
+            List<Integer> matchList = rightFile.GetIndices(leftHash);
 
-					if (leftFile.GetLineString(i - 1)!=null||((leftFile.GetLineString(i - 1)).hashCode() == matchList.get(j-1).hashCode())) { //added error checking if you forget to see if the line exists 
-						confidenceValue += 1;
-					}
-					if (leftFile.GetLineString(i + 1)!=null||((leftFile.GetLineString(i + 1)).hashCode() == matchList.get(j +1).hashCode())) { //added error checking if you forget to see if the line exists 
-						confidenceValue += 1;
-					}
-					if (confidenceValue > finalConfidence) {
-						finalConfidence = confidenceValue;
-						matched = j;
-					}
-					
-				}
-				
-				int rightIndex = matchList.get(matched);
-				
-				unchangedLines.put(i, rightIndex);
-			}
-		}
+            // no match
+            if (matchList == null || matchList.isEmpty()) {
+                changedLeft.add(i);
+                continue;
+            }
 
-		for (int j = 0; j < rightFile.GetSize(); j++) {
-			if (!unchangedLines.containsValue(j)) {
-				changedRight.add(j);
-			}
-		}
-	}
+            int finalConfidence = -1;
+            int matchedIndex = -1;
 
-	// it return unchanged line pairs
-	public Map<Integer, Integer> getUnchanged() {
-		return unchangedLines;
-	}
+            // looping through candidate list
+            for (int j = 0; j < matchList.size(); j++) {
 
-	// this stores the lines that changed
-	public List<Integer> getChangedLeft() {
-    	changedLeft = {[[1][0]],[[1][0]],[[1][0]],[[1][0]],[[1][0]],[[1][0]],}
-    	return changedLeft;
+                int rightIndex = matchList.get(j);
+
+                int confidenceValue = 0;
+
+                // -1 checking
+                if (i - 1 >= 0 && rightIndex - 1 >= 0) {
+                    String leftPrev = pre.fixLine(leftFile.GetLineString(i - 1));
+                    String rightPrev = pre.fixLine(rightFile.GetLineString(rightIndex - 1));
+
+                    if (leftPrev.equals(rightPrev)) {
+                        confidenceValue++;
+                    }
+                }
+
+                // +1 checking
+                if (i + 1 < leftFile.GetSize() && rightIndex + 1 < rightFile.GetSize()) {
+                    String leftNext = pre.fixLine(leftFile.GetLineString(i + 1));
+                    String rightNext = pre.fixLine(rightFile.GetLineString(rightIndex + 1));
+
+                    if (leftNext.equals(rightNext)) {
+                        confidenceValue++;
+                    }
+                }
+
+                // best match
+                if (confidenceValue > finalConfidence) {
+                    finalConfidence = confidenceValue;
+                    matchedIndex = rightIndex;
+                }
+            }
+
+            // If nothing meaningful, treat as changed
+            if (matchedIndex == -1) {
+                changedLeft.add(i);
+            } else {
+                unchangedLines.put(i, matchedIndex);
+            }
+        }
+
+        // anything in right-side not used is changed
+        for (int j = 0; j < rightFile.GetSize(); j++) {
+            if (!unchangedLines.containsValue(j)) {
+                changedRight.add(j);
+            }
+        }
     }
 
-	public List<Integer> getChangedRight() {
-		return changedRight;
-	}
+    public Map<Integer, Integer> getUnchanged() {
+        return unchangedLines;
+    }
+
+    public List<Integer> getChangedLeft() {
+        return changedLeft;
+    }
+
+    public List<Integer> getChangedRight() {
+        return changedRight;
+    }
 }
