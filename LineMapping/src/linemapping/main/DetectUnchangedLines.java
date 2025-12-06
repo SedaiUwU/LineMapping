@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import linemapping.model.LineMapObject;
 import linemapping.model.Preprocessor;
@@ -114,4 +116,42 @@ public class DetectUnchangedLines {
     public List<Integer> getChangedRight() {
         return changedRight;
     }
+    
+    public Map<String,List<?>> ChangedCandidateList() {
+
+        List<String> leftcandidates = new ArrayList<>();
+        List<String> rightcandidates = new ArrayList<>();
+        Set<Integer> allIndices = new TreeSet<>();
+        HashMap<String, List<?>> map = new HashMap<>();
+        
+        allIndices.addAll(changedLeft);
+        allIndices.addAll(changedRight);
+        map.put("left", leftcandidates);
+        map.put("right", rightcandidates);
+     
+        for (int index : allIndices) {
+
+            String leftText = "";
+            String rightText = "";
+
+            if (changedLeft.contains(index)) {
+                leftText = leftFile.GetLineString(index);
+                if (leftText == null) leftText = "";
+                leftcandidates.add("LN: "+(index+1)+" "+leftText);
+            }
+
+            if (changedRight.contains(index)) {
+                rightText = rightFile.GetLineString(index);
+                if (rightText == null) rightText = "";
+                rightcandidates.add("LN: "+(index+1)+" "+rightText);
+            }
+
+    }
+        
+        for (String key : map.keySet()) {
+            System.out.println(key + " -> " + map.get(key));
+            System.out.println();
+        }
+        return map;
+}
 }
