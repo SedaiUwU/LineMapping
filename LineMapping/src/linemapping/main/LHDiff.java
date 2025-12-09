@@ -57,7 +57,14 @@ public class LHDiff {
 				}
 
 				if (bestMatch != -1) {
-					allMappings.put(leftIndex, bestMatch);
+
+					List<Integer> splitGroup = detectSplitMapping(leftIndex, bestMatch, oldFile, newFile);
+
+					if (splitGroup.size() > 1) {
+						allMappings.put(leftIndex, splitGroup.get(0));
+					} else {
+						allMappings.put(leftIndex, bestMatch);
+					}
 				}
 			}
 
@@ -108,6 +115,36 @@ public class LHDiff {
 		
 		//used ratio as recomended from slides
 		return (0.6 * contentSim) + (0.4 * contextSim);
+	}
+		// Line splitting method has been implemented
+	private static List<Integer> detectSplitMapping(int leftIndex, int initialRightIndex,
+			LineMapObject leftFile, LineMapObject rightFile) {
+
+		List<Integer> group = new ArrayList<>();
+		group.add(initialRightIndex);
+
+		String left = leftFile.GetFixedLine(leftIndex);
+		String combined = rightFile.GetFixedLine(initialRightIndex);
+
+		double bestScore = Levenshtein.distance(left, combined);
+
+		for (int next = initialRightIndex + 1; next < rightFile.GetSize(); next++) {
+
+			String nextRight = rightFile.GetFixedLine(next);
+			String newCombined = combined + " " + nextRight;
+
+			double newScore = Levenshtein.distance(left, newCombined);
+
+			if (newScore < bestScore) {
+				group.add(next);
+				combined = newCombined;
+				bestScore = newScore;
+			} else {
+				break;
+			}
+		}
+
+		return group;
 	}
 
 	private static void exportMapping(Map<Integer, Integer> mappings, LineMapObject oldFile, LineMapObject newFile,
