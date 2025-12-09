@@ -2,156 +2,162 @@ package linemapping.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import linemapping.model.LineMapObject;
-import linemapping.model.Preprocessor;
 
 public class DetectUnchangedLines {
 
-    private LineMapObject leftFile;
-    private LineMapObject rightFile;
+	private LineMapObject leftFile;
+	private LineMapObject rightFile;
 
-    private Map<Integer, Integer> unchangedLines;
-    private List<Integer> changedLeft;
-    private List<Integer> changedRight;
+	private Map<Integer, Integer> unchangedLines;
+	private List<Integer> changedLeft;
+	private List<Integer> changedRight;
+	private Set<Integer> matchedRightIndices;
 
-    public DetectUnchangedLines(LineMapObject left, LineMapObject right) {
-        this.leftFile = left;
-        this.rightFile = right;
+	public DetectUnchangedLines(LineMapObject left, LineMapObject right) {
+		this.leftFile = left;
+		this.rightFile = right;
 
-        unchangedLines = new HashMap<>();
-        changedLeft = new ArrayList<>();
-        changedRight = new ArrayList<>();
-    }
-    
-    // here we detect the unchanged lines
-    public void findUnchanged() {
+		unchangedLines = new HashMap<>();
+		changedLeft = new ArrayList<>();
+		changedRight = new ArrayList<>();
+		matchedRightIndices = new HashSet<>();
+	}
 
-        Preprocessor pre = new Preprocessor();
+	// here we detect the unchanged lines
+	public void findUnchanged() {
 
-        for (int i = 0; i < leftFile.GetSize(); i++) {
+		for (int i = 0; i < leftFile.GetSize(); i++) {
 
-            String leftText = leftFile.GetLineString(i);
-            if (leftText == null) {
-                changedLeft.add(i);
-                continue;
-            }
+			int leftHash = leftFile.GetLineHash(i);
 
-            // using preprocessed hash
-            int leftHash = pre.fixLine(leftText).hashCode();
+			List<Integer> matchList = rightFile.GetIndices(leftHash);
 
-            List<Integer> matchList = rightFile.GetIndices(leftHash);
+			// no match
+			if (matchList == null || matchList.isEmpty()) {
+				changedLeft.add(i);
+				continue;
+			}
+			// unique quick match
+			if (matchList.size() == 1) {
+				int uniqueMatch = matchList.get(0);
+				if (!matchedRightIndices.contains(uniqueMatch)) {
+					unchangedLines.put(i, uniqueMatch);
+					matchedRightIndices.add(uniqueMatch);
+				}
+				continue;
+			}
 
-            // no match
-            if (matchList == null || matchList.isEmpty()) {
-                changedLeft.add(i);
-                continue;
-            }
+			int finalConfidence = -1;
+			int matchedIndex = -1;
 
-            int finalConfidence = -1;
-            int matchedIndex = -1;
+			// looping through candidate list
+			for (int rightIndex : matchList) {
 
-            // looping through candidate list
-            for (int j = 0; j < matchList.size(); j++) {
+				if (matchedRightIndices.contains(rightIndex))
+					continue;
 
-                int rightIndex = matchList.get(j);
+				int confidenceValue = 0;
 
-                int confidenceValue = 0;
+				// -1 checking
+				if (i - 1 >= 0 && rightIndex - 1 >= 0) {
+					String leftPrev = leftFile.GetFixedLine(i - 1);
+					String rightPrev = rightFile.GetFixedLine(rightIndex - 1);
 
-                // -1 checking
-                if (i - 1 >= 0 && rightIndex - 1 >= 0) {
-                    String leftPrev = pre.fixLine(leftFile.GetLineString(i - 1));
-                    String rightPrev = pre.fixLine(rightFile.GetLineString(rightIndex - 1));
+					if (leftPrev != null && leftPrev.equals(rightPrev)) {
+						confidenceValue++;
+					}
+				}
 
-                    if (leftPrev.equals(rightPrev)) {
-                        confidenceValue++;
-                    }
-                }
+				// +1 checking
+				if (i + 1 < leftFile.GetSize() && rightIndex + 1 < rightFile.GetSize()) {
+					String leftNext = leftFile.GetFixedLine(i + 1);
+					String rightNext = rightFile.GetFixedLine(rightIndex + 1);
 
-                // +1 checking
-                if (i + 1 < leftFile.GetSize() && rightIndex + 1 < rightFile.GetSize()) {
-                    String leftNext = pre.fixLine(leftFile.GetLineString(i + 1));
-                    String rightNext = pre.fixLine(rightFile.GetLineString(rightIndex + 1));
+					if (leftNext != null && leftNext.equals(rightNext)) {
+						confidenceValue++;
+					}
+				}
 
-                    if (leftNext.equals(rightNext)) {
-                        confidenceValue++;
-                    }
-                }
+				// best match
+				if (confidenceValue > finalConfidence) {
+					finalConfidence = confidenceValue;
+					matchedIndex = rightIndex;
+				}
+			}
 
-                // best match
-                if (confidenceValue > finalConfidence) {
-                    finalConfidence = confidenceValue;
-                    matchedIndex = rightIndex;
-                }
-            }
+			// If nothing meaningful, treat as changed
+			if (matchedIndex == -1) {
+				changedLeft.add(i);
+			} else {
+				unchangedLines.put(i, matchedIndex);
+				matchedRightIndices.add(matchedIndex);
+			}
+		}
 
-            // If nothing meaningful, treat as changed
-            if (matchedIndex == -1) {
-                changedLeft.add(i);
-            } else {
-                unchangedLines.put(i, matchedIndex);
-            }
-        }
+		// anything in right-side not used is changed
+		for (int j = 0; j < rightFile.GetSize(); j++) {
+			if (!matchedRightIndices.contains(j)) { 
+	            changedRight.add(j);
+	        }
+		}
+	}
 
-        // anything in right-side not used is changed
-        for (int j = 0; j < rightFile.GetSize(); j++) {
-            if (!unchangedLines.containsValue(j)) {
-                changedRight.add(j);
-            }
-        }
-    }
+	public Map<Integer, Integer> getUnchanged() {
+		return unchangedLines;
+	}
 
-    public Map<Integer, Integer> getUnchanged() {
-        return unchangedLines;
-    }
+	public List<Integer> getChangedLeft() {
+		return changedLeft;
+	}
 
-    public List<Integer> getChangedLeft() {
-        return changedLeft;
-    }
+	public List<Integer> getChangedRight() {
+		return changedRight;
+	}
 
-    public List<Integer> getChangedRight() {
-        return changedRight;
-    }
-    
-    public Map<String,List<?>> ChangedCandidateList() {
+	public Map<String, List<?>> ChangedCandidateList() {
 
-        List<String> leftcandidates = new ArrayList<>();
-        List<String> rightcandidates = new ArrayList<>();
-        Set<Integer> allIndices = new TreeSet<>();
-        HashMap<String, List<?>> map = new HashMap<>();
-        
-        allIndices.addAll(changedLeft);
-        allIndices.addAll(changedRight);
-        map.put("left", leftcandidates);
-        map.put("right", rightcandidates);
-     
-        for (int index : allIndices) {
+		List<String> leftcandidates = new ArrayList<>();
+		List<String> rightcandidates = new ArrayList<>();
+		Set<Integer> allIndices = new TreeSet<>();
+		HashMap<String, List<?>> map = new HashMap<>();
 
-            String leftText = "";
-            String rightText = "";
+		allIndices.addAll(changedLeft);
+		allIndices.addAll(changedRight);
+		map.put("left", leftcandidates);
+		map.put("right", rightcandidates);
 
-            if (changedLeft.contains(index)) {
-                leftText = leftFile.GetLineString(index);
-                if (leftText == null) leftText = "";
-                leftcandidates.add("LN: "+(index+1)+" "+leftText);
-            }
+		for (int index : allIndices) {
 
-            if (changedRight.contains(index)) {
-                rightText = rightFile.GetLineString(index);
-                if (rightText == null) rightText = "";
-                rightcandidates.add("LN: "+(index+1)+" "+rightText);
-            }
+			String leftText = "";
+			String rightText = "";
 
-    }
-        
-        for (String key : map.keySet()) {
-            System.out.println(key + " -> " + map.get(key));
-            System.out.println();
-        }
-        return map;
-}
+			if (changedLeft.contains(index)) {
+				leftText = leftFile.GetLineString(index);
+				if (leftText == null)
+					leftText = "";
+				leftcandidates.add("LN: " + (index + 1) + " " + leftText);
+			}
+
+			if (changedRight.contains(index)) {
+				rightText = rightFile.GetLineString(index);
+				if (rightText == null)
+					rightText = "";
+				rightcandidates.add("LN: " + (index + 1) + " " + rightText);
+			}
+
+		}
+
+		for (String key : map.keySet()) {
+			System.out.println(key + " -> " + map.get(key));
+			System.out.println();
+		}
+		return map;
+	}
 }

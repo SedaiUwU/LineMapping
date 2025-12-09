@@ -7,55 +7,83 @@ import java.util.List;
 import java.util.Map;
 
 public class LineMapObject {
-    
-    private List<String> rawLines;
-    private Map<Integer, List<Integer>> lookupMap;
 
-    public LineMapObject(String fileDir) {
+	private List<String> rawLines;
+	private List<String> fixedLines;
+	private List<Integer> lineHashes;
+	private Map<Integer, List<Integer>> lookupMap;
 
-        lookupMap = new HashMap<>();
-        rawLines = LinemapConstructor.FiletoList(fileDir);
+	public LineMapObject(String fileDir) {
 
-        Preprocessor pre = new Preprocessor(); 
-        //we must run the pre processing here in line mapping, not in the file reader
+		lookupMap = new HashMap<>();
+		rawLines = LinemapConstructor.FiletoList(fileDir);
+		fixedLines = new ArrayList<>();
+		lineHashes = new ArrayList<>();
 
-        for (int i = 0; i < rawLines.size(); i++) {
+		Preprocessor pre = new Preprocessor();
 
-            String lineContent = rawLines.get(i);
+		for (int i = 0; i < rawLines.size(); i++) {
 
-            String fixed = pre.fixLine(lineContent);  
-            //this creates the new cleaned version that will be used for hashing
+			String lineContent = rawLines.get(i);
 
-            int hash = fixed.hashCode(); 
-            //this is our new hash after preprocessing is applied
+			String fixed = pre.fixLine(lineContent);
+			// this creates the new cleaned version that will be used for hashing
 
-            if (!lookupMap.containsKey(hash)) {
-                lookupMap.put(hash, new ArrayList<>());
-            }
+			fixedLines.add(fixed);
+			// save the line to reuse later
 
-            lookupMap.get(hash).add(i);
-        }
-    }
-    
-    public String GetLineString(int lineNumber) {
-        if (lineNumber >= 0 && lineNumber < rawLines.size()) {
-            return rawLines.get(lineNumber);
+			int hash = fixed.hashCode();
+			// this is our new hash after preprocessing is applied
+
+			lineHashes.add(hash);
+			// save the hash to reuse later
+
+			if (!lookupMap.containsKey(hash)) {
+				lookupMap.put(hash, new ArrayList<>());
+			}
+
+			// adds i to the list of numbers found
+			lookupMap.get(hash).add(i);
+		}
+	}
+
+	public String GetLineString(int lineNumber) {
+        if (isValidIndex(lineNumber)) {
+        	return rawLines.get(lineNumber);
         }
         return null;
     }
 
-    public List<Integer> GetIndices(int hash) {
-        if (lookupMap.containsKey(hash)) {
-            return lookupMap.get(hash);
+	private boolean isValidIndex(int i) {
+        return i >= 0 && i < rawLines.size();
+    }
+
+	public List<Integer> GetIndices(int hash) {
+		if (lookupMap.containsKey(hash)) {
+			return lookupMap.get(hash);
+		}
+		return null;
+	}
+
+	public String GetFixedLine(int lineNumber) {
+		if (isValidIndex(lineNumber)) {
+			return fixedLines.get(lineNumber);
+		}
+		return null;
+	}
+	
+	public int GetLineHash(int lineNumber) {
+        if (isValidIndex(lineNumber)) {
+        	return lineHashes.get(lineNumber);
         }
-        return Collections.emptyList();
+        return 0;
     }
 
-    public boolean CheckNull() {
-        return rawLines == null || rawLines.isEmpty();
-    }
+	public boolean CheckNull() {
+		return rawLines == null || rawLines.isEmpty();
+	}
 
-    public int GetSize() {
-        return rawLines.size();
-    }
+	public int GetSize() {
+		return rawLines.size();
+	}
 }
