@@ -7,117 +7,150 @@ import java.nio.charset.StandardCharsets;
 
 public class BugFixChecker {
 
-	public static boolean isBugFixCommit(String message, String[] keywords) {
-		String lower = message.toLowerCase();
+	 public static int distance(String str1, String str2) {
+	        int[][] dp = new int[str1.length() + 1][str2.length() + 1];
 
-		// checks if it exact match
-		for (String key : keywords) {
-			if (lower.contains(key)) {
-				return true;
+	        for (int i = 0; i <= str1.length(); i++) {
+	            for (int j = 0; j <= str2.length(); j++) {
+	                if (i == 0) {
+	                    dp[i][j] = j;
+	                } else if (j == 0) {
+	                    dp[i][j] = i;
+	                } else {
+	                    int cost = (str1.charAt(i - 1) == str2.charAt(j - 1)) ? 0 : 1;
+	                    dp[i][j] = min(dp[i - 1][j - 1] + cost, 
+	                                   dp[i - 1][j] + 1, 
+	                                   dp[i][j - 1] + 1);
+	                }
+	            }
+	        }
+	        return dp[str1.length()][str2.length()];
+	    }
+	 
+	 private static int min(int... numbers) {
+			int min = Integer.MAX_VALUE;
+			for (int num : numbers) {
+				if (num < min)
+					min = num;
 			}
+			return min;
 		}
+    public static boolean isBugFixCommit(String message, String[] keywords) {
+        String lower = message.toLowerCase();
 
-		String[] words = lower.split("\\W+");
+        //checks if it exact match 
+        for (String key : keywords) {
+            if (lower.contains(key)) {
+                return true;
+            }
+        }
 
-		// checks just in case for typos with keywords
-		for (String word : words) {
-			if (word.isEmpty())
-				continue;
-			for (String key : keywords) {
+      
+        String[] words = lower.split("\\W+");  
 
-				int distance = (int) Levenshtein.distance(word, key);
+        //checks just in case for typos with keywords
+        for (String word : words) {
+        	 if (word.isEmpty()) continue; 
+            for (String key : keywords) {
 
-				// decent match
-				if (distance <= 1) {
-					return true;
-				}
-			}
-		}
+                
+                int distance = distance(word, key);
 
-		return false;
-	}
+                //decent match
+                if (distance <= 1) {
+                    return true;
+                }
+            }
+        }
 
-	public static void main(String[] args) {
-		String repoPath = "C:\\Users\\sriram\\git\\LineMapping";
+        return false;
+    }
 
-		// keywords for bug changes in commit messages
-		String[] keywords = { "fix", "fixed", "bug", "issue", "patch", "error", "resolve", "prevent", "defect",
-				"resolved", "repair", "corrected", "handled" };
+   
+    public static void main(String[] args) {
+        String repoPath = "C:\\Users\\sriram\\git\\LineMapping";
 
-		try {
+        //keywords for bug changes in commit messages
+        String[] keywords = { "fix", "fixed", "bug", "issue", "patch", "error","resolve","prevent", "defect","resolved","repair","corrected","handled" };
 
-			ProcessBuilder pb = new ProcessBuilder("git", "log", "--pretty=format:%H%n%an%n%B%n%n===END===");
+        try {
+            
+            ProcessBuilder pb = new ProcessBuilder(
+                    "git", "log", "--pretty=format:%H%n%an%n%B%n%n===END==="
+            );
 
-			pb.directory(new File(repoPath));
+            pb.directory(new File(repoPath));
 
-			Process process = pb.start();
+          
+            Process process = pb.start();
 
-			try (BufferedReader reader = new BufferedReader(
-					new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+            
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
 
-				StringBuilder commitBlock = new StringBuilder();
-				String line;
+                StringBuilder commitBlock = new StringBuilder();
+                String line;
 
-				System.out.println("Scanning Git commits for bug fixes...\n");
+                System.out.println("Scanning Git commits for bug fixes...\n");
 
-				while ((line = reader.readLine()) != null) {
+                while ((line = reader.readLine()) != null) {
 
-					// Separator marking the end of one commit
-					if (line.equals("===END===")) {
+                    // Separator marking the end of one commit
+                    if (line.equals("===END===")) {
 
-						// Split into commitHash, author, message
-						String[] parts = commitBlock.toString().split("\n", 3);
+                        // Split into commitHash, author, message
+                        String[] parts = commitBlock.toString().split("\n", 3);
 
-						if (parts.length >= 3) {
-							String commitHash = parts[0].trim();
-							String author = parts[1].trim();
-							String fullMessage = parts[2];
+                        if (parts.length >= 3) {
+                            String commitHash = parts[0].trim();
+                            String author = parts[1].trim();
+                            String fullMessage = parts[2];
 
-							// keyword detection
-							if (isBugFixCommit(fullMessage, keywords)) {
-								System.out.println("Bug Fix Commit Found:");
-								System.out.println("Commit: " + commitHash);
-								System.out.println("Author: " + author);
-								System.out.println("Message: " + fullMessage.trim().split("\n")[0]);
-								System.out.println("-------------------------------------");
-							}
-						}
+                            //  keyword detection
+                            if (isBugFixCommit(fullMessage, keywords)) {
+                                System.out.println("Bug Fix Commit Found:");
+                                System.out.println("Commit: " + commitHash);
+                                System.out.println("Author: " + author);
+                                System.out.println("Message: " + fullMessage.trim().split("\n")[0]);
+                                System.out.println("-------------------------------------");
+                            }
+                        }
 
-						// Reset for next commit
-						commitBlock.setLength(0);
+                        // Reset for next commit
+                        commitBlock.setLength(0);
 
-					} else {
-						// Accumulate commit text
-						commitBlock.append(line).append("\n");
-					}
-				}
-			}
+                    } else {
+                        // Accumulate commit text
+                        commitBlock.append(line).append("\n");
+                    }
+                }
+            }
 
-			// Read errors from git
-			try (BufferedReader errorReader = new BufferedReader(
-					new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8))) {
+            // Read errors from git
+            try (BufferedReader errorReader = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8))) {
 
-				String errorLine;
-				boolean hasError = false;
+                String errorLine;
+                boolean hasError = false;
 
-				while ((errorLine = errorReader.readLine()) != null) {
-					System.err.println("Git Error: " + errorLine);
-					hasError = true;
-				}
+                while ((errorLine = errorReader.readLine()) != null) {
+                    System.err.println("Git Error: " + errorLine);
+                    hasError = true;
+                }
 
-				if (hasError) {
-					System.out.println("Git command encountered errors.");
-				}
-			}
+                if (hasError) {
+                    System.out.println("Git command encountered errors.");
+                }
+            }
 
-			int exitCode = process.waitFor();
-			if (exitCode != 0) {
-				System.out.println("Git command exited with code: " + exitCode);
-			}
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.out.println("Git command exited with code: " + exitCode);
+            }
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("Error running git command or reading repository.");
-		}
-	}
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error running git command or reading repository.");
+        }
+    }
 }
