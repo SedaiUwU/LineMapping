@@ -11,7 +11,7 @@ public class BugFixChecker {
     public static boolean isBugFixCommit(String message, String[] keywords) {
         String lower = message.toLowerCase();
 
-        //checks if it exact match 
+        //checks if it exact match
         for (String key : keywords) {
             if (lower.contains(key)) {
                 return true;
