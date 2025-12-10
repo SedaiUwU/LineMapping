@@ -167,6 +167,9 @@ public class LHDiff {
 				System.out.println("Old line " + oldLineNum + " -> New line " + newLineNum);
 			}
 		}
+		 catch (IOException e) {
+				e.printStackTrace();
+			}
 		System.out.println("Complete mapping written to: " + outputPath);
 	}
 }
