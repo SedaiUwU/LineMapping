@@ -6,7 +6,16 @@ import java.io.IOException;
 import java.util.*;
 
 import linemapping.model.LineMapObject;
+/**
+ * LHDiff
+ * 
+ * Purpose:
+ * This class implements a line-level diff algorithm that maps lines
+ * between an old and a new version of a source file. It combines
+ * hash-based matching, semantic similarity, and contextual analysis
+ * to detect unchanged, modified, and split lines.
 
+ */
 public class LHDiff {
 
 	static int KCANDIDATES = 15;
@@ -74,7 +83,12 @@ public class LHDiff {
 			e.printStackTrace();
 		}
 	}
-
+	
+	
+	/*
+	 * Purpose: finds candidate from right side line indices that are similar to the the left side using sim hash and hamming distance
+	 * Post: returns the list of candidates 
+	 */
 	private static List<Integer> getSimHashCandidates(int leftIndex, List<Integer> changedRight, LineMapObject leftFile,
 			LineMapObject rightFile) {
 		List<Integer> candidates = new ArrayList<>();
@@ -100,7 +114,12 @@ public class LHDiff {
 
 		return candidates;
 	}
-
+	
+	
+/*
+ * Purpose: calculates a hybrid similarity score between 2 lines by combining content similarity using levenshtein and contextual similarity using cosine
+ * Post: value representing the score
+ */
 	private static double calculateHybridScore(int leftIndex, int rightIndex, LineMapObject leftFile, LineMapObject rightFile) {
 		String lLine = leftFile.GetFixedLine(leftIndex);
 		String rLine = rightFile.GetFixedLine(rightIndex);
@@ -116,7 +135,10 @@ public class LHDiff {
 		//used ratio as recomended from slides
 		return (0.6 * contentSim) + (0.4 * contextSim);
 	}
-		// Line splitting method has been implemented
+		/*
+		 * Purpose: detects whether a single left side line maps to multiple right side lines by combining them and evaluate similarity 
+		 * Post: returns a right side list of indices representing the best split mapping group 
+		 */
 	private static List<Integer> detectSplitMapping(int leftIndex, int initialRightIndex,
 			LineMapObject leftFile, LineMapObject rightFile) {
 
@@ -147,6 +169,10 @@ public class LHDiff {
 		return group;
 	}
 
+	/*
+	 * Purpose:Exports the final line mapping between the old and new file to a csv file
+	 * Post:File written to output path 
+	 */
 	private static void exportMapping(Map<Integer, Integer> mappings, LineMapObject oldFile, LineMapObject newFile,
 			String outputPath) throws IOException {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath))) {

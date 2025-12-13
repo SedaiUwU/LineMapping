@@ -3,7 +3,22 @@ package linemapping.main;
 import java.io.*;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
-
+/**
+ * LHDiffTestRunner
+ * 
+ * Purpose:
+ * This class serves as a simple test harness for running the LHDiff
+ * line-mapping algorithm on predefined input files.
+ * 
+ * Functionality:
+ * - Specifies test dataset file paths
+ * - Invokes the LHDiff main method with test inputs
+ * - Reports execution status and output location
+ * 
+ * Use Case:
+ * Intended for validating and debugging the LHDiff algorithm
+ * during development using known test cases.
+ */
 public class LHDiffTestRunner {
 
     public static void main(String[] args) throws Exception {

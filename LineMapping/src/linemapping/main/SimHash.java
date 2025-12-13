@@ -3,9 +3,33 @@ package linemapping.main;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
+/**
+ * SimHash
+ * 
+ * Purpose:
+ * This class implements a 64-bit SimHash algorithm to generate
+ * semantic fingerprints for lines of source code. SimHash allows
+ * approximate comparison of lines by measuring similarity rather
+ * than exact matches.
+ * 
+ * Functionality:
+ * - Normalizes lines of source code to reduce syntactic noise
+ * - Tokenizes input and hashes tokens using MD5
+ * - Produces a 64-bit SimHash fingerprint
+ * - Computes Hamming distance between fingerprints
+ * - Provides debugging output for comparing two lines
+ * 
+ * Use Case:
+ * Designed for detecting similar or modified lines of code,
+ * such as during code evolution analysis or line mapping.
+ */
 public class SimHash {
 
+	
+	/*
+	 * Purpose:calculates the 64bit sim hash fingerprint for a line of text 
+	 * Post:returns a 64-bit hash that is the lines semantic content
+	 */
 	public static long compute(String line) {
 		if (line == null || line.trim().isEmpty())
 			return 0;
@@ -38,6 +62,9 @@ public class SimHash {
 		return fingerprint;
 	}
 
+	/*
+	 * Purpose:Normalizes a line of source code by removing syntactic noise and standardizing commonly changing identifiers
+	 */
 	private static String enhancedNormalize(String line) {
 		if (line == null)
 			return "";
@@ -69,7 +96,12 @@ public class SimHash {
 
 		return normalized;
 	}
-
+	
+	
+/*
+ * Purpose: generates 64 bit hash value for given token using MD5 method 
+ * Post:64 bit hash of the input str
+ */
 	private static long get64BitHash(String str) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("MD5");
@@ -85,7 +117,9 @@ public class SimHash {
 		return Long.bitCount(xor);
 	}
 
-	//Compare two lines
+	/*
+	 * Purpose: outputs the debugging information comparing two lines with the normalization, sim hash values and distance 
+	 */
 	public static void debugCompare(String line1, String line2) {
 		System.out.println("Line 1 original: " + line1);
 		System.out.println("Line 2 original: " + line2);

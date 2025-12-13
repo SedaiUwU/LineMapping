@@ -1,8 +1,25 @@
 package linemapping.main;
-
+/**
+ * Levenshtein
+ * 
+ * Purpose:
+ * This class implements the Levenshtein edit distance algorithm to
+ * measure the similarity between two strings. It supports both
+ * raw edit distance computation and normalized similarity scoring.
+ * 
+ * Functionality:
+ * - Computes edit distance using a dynamic programming approach
+ * - Converts edit distance into a similarity score between 0 and 1
+ * - Provides a utility method for minimum value selection
+ * 
+ * Use Case:
+ * Used as the content-based similarity component in a hybrid
+ * line-matching algorithm.
+ */
 public class Levenshtein {
 
 	// Source: Standard DP Algorithm (GeeksforGeeks / Baeldung)
+
 	public static int editDistance(String str1, String str2) {
 		int[][] dp = new int[str1.length() + 1][str2.length() + 1];
 

@@ -4,7 +4,25 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-
+/**
+ * BugFixChecker
+ * 
+ * Purpose:
+ * This class analyzes Git commit messages to determine whether a commit
+ * is likely related to a bug fix. It does this by scanning commit messages
+ * for predefined bug-related keywords and near matches using
+ * Levenshtein distance.
+ * 
+ * Functionality:
+ * - Computes edit distance between words to handle minor typos
+ * - Detects exact and approximate keyword matches in commit messages
+ * - Executes a Git log command to read commit history
+ * - Prints commits identified as bug-fix related
+ * 
+ * Usage:
+ * The program is intended to be run on a local Git repository.
+ * Update the repository path and keyword list
+ */
 public class BugFixChecker {
 
 	 public static int distance(String str1, String str2) {
@@ -35,6 +53,11 @@ public class BugFixChecker {
 			}
 			return min;
 		}
+	 
+	 /*
+	  * Purpose:determines wether a commit message is a bug fix commit by checking for the exact keyword matches and near matches
+	  * Post: returns true if message has keyword and false if not 
+	  */
     public static boolean isBugFixCommit(String message, String[] keywords) {
         String lower = message.toLowerCase();
 

@@ -9,7 +9,24 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import linemapping.model.LineMapObject;
-
+/**
+ * DetectUnchangedLines
+ * 
+ * Purpose:
+ * This class identifies unchanged lines between two versions of a file
+ * by comparing line hash values and validating matches using contextual
+ * confidence checks.
+ * 
+ * Functionality:
+ * - Matches lines using precomputed hash values
+ * - Resolves ambiguous matches using neighboring line comparisons
+ * - Tracks unchanged line mappings between the left and right files
+ * - Records changed lines on both sides when no reliable match exists
+ * 
+ * Use Case:
+ * Intended for line-level file comparison, such as detecting unchanged,
+ * modified, or moved lines between file versions.
+ */
 public class DetectUnchangedLines {
 
 	private LineMapObject leftFile;
@@ -20,6 +37,10 @@ public class DetectUnchangedLines {
 	private List<Integer> changedRight;
 	private Set<Integer> matchedRightIndices;
 
+	
+	/*
+	 * Purpose: Initializes the object with two files to compare the lines 
+	 */
 	public DetectUnchangedLines(LineMapObject left, LineMapObject right) {
 		this.leftFile = left;
 		this.rightFile = right;
@@ -30,7 +51,10 @@ public class DetectUnchangedLines {
 		matchedRightIndices = new HashSet<>();
 	}
 
-	// here we detect the unchanged lines
+/*
+ * Pre:left file and right file
+ * Purpose: Detects unchanged lines between the left and right hash matching and confidence checks
+ */
 	public void findUnchanged() {
 
 		for (int i = 0; i < leftFile.GetSize(); i++) {
@@ -121,43 +145,5 @@ public class DetectUnchangedLines {
 		return changedRight;
 	}
 
-	public Map<String, List<?>> ChangedCandidateList() {
-
-		List<String> leftcandidates = new ArrayList<>();
-		List<String> rightcandidates = new ArrayList<>();
-		Set<Integer> allIndices = new TreeSet<>();
-		HashMap<String, List<?>> map = new HashMap<>();
-
-		allIndices.addAll(changedLeft);
-		allIndices.addAll(changedRight);
-		map.put("left", leftcandidates);
-		map.put("right", rightcandidates);
-
-		for (int index : allIndices) {
-
-			String leftText = "";
-			String rightText = "";
-
-			if (changedLeft.contains(index)) {
-				leftText = leftFile.GetLineString(index);
-				if (leftText == null)
-					leftText = "";
-				leftcandidates.add("LN: " + (index + 1) + " " + leftText);
-			}
-
-			if (changedRight.contains(index)) {
-				rightText = rightFile.GetLineString(index);
-				if (rightText == null)
-					rightText = "";
-				rightcandidates.add("LN: " + (index + 1) + " " + rightText);
-			}
-
-		}
-
-		for (String key : map.keySet()) {
-			System.out.println(key + " -> " + map.get(key));
-			System.out.println();
-		}
-		return map;
-	}
+	
 }

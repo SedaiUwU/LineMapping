@@ -6,10 +6,31 @@ import java.util.Map;
 import java.util.Set;
 
 import linemapping.model.LineMapObject;
+/**
+ * Cosine
+ * 
+ * Purpose:
+ * This class provides utilities for computing cosine similarity
+ * between two context vectors represented as token-frequency maps.
+ * Cosine similarity measures how similar two vectors are based on
+ * their direction rather than magnitude.
+ * 
+ * Functionality:
+ * - Computes cosine similarity between two token-frequency maps
+ * - Builds a contextual vector for a given line using surrounding lines
 
+ * 
+ * Use Case:
+ * Used as part of a hybrid line-matching algorithm to capture
+ * contextual similarity between lines of code.
+ */
 public class Cosine {
 	
-    // Source: Apache Commons Text logic
+    
+	/*
+	 * Purpose: Computes the cosine similarity between two context vectors  by treating the maps as numerical vectors
+	 * Source: Apache Commons Text logic
+	 */
     public static double similarity(Map<String, Integer> v1, Map<String, Integer> v2) {
         if (v1 == null || v2 == null) return 0.0;
 
@@ -33,6 +54,10 @@ public class Cosine {
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
     
+    
+    /*
+     * Purpose: Builds a context vector for the line index given by counting frequency of tokens and surrounding lines  
+     */
     public static Map<String, Integer> getContextVector(int index, LineMapObject file) {
         Map<String, Integer> vector = new HashMap<>();
         
