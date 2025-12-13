@@ -29,7 +29,7 @@ public class LHDiffTestRunner {
 
 		runLHDiff(oldFile, newFile, outputFile);
 
-		System.out.println("\n✓ LHDiff completed successfully.");
+		System.out.println("\n LHDiff completed successfully.");
 		System.out.println("Output saved to: " + outputFile);
 	}
 
