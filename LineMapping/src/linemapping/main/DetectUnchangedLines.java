@@ -9,23 +9,21 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import linemapping.model.LineMapObject;
+
 /**
  * DetectUnchangedLines
  * 
- * Purpose:
- * This class identifies unchanged lines between two versions of a file
+ * Purpose: This class identifies unchanged lines between two versions of a file
  * by comparing line hash values and validating matches using contextual
  * confidence checks.
  * 
- * Functionality:
- * - Matches lines using precomputed hash values
- * - Resolves ambiguous matches using neighboring line comparisons
- * - Tracks unchanged line mappings between the left and right files
- * - Records changed lines on both sides when no reliable match exists
+ * Functionality: - Matches lines using precomputed hash values - Resolves
+ * ambiguous matches using neighboring line comparisons - Tracks unchanged line
+ * mappings between the left and right files - Records changed lines on both
+ * sides when no reliable match exists
  * 
- * Use Case:
- * Intended for line-level file comparison, such as detecting unchanged,
- * modified, or moved lines between file versions.
+ * Use Case: Intended for line-level file comparison, such as detecting
+ * unchanged, modified, or moved lines between file versions.
  */
 public class DetectUnchangedLines {
 
@@ -37,9 +35,8 @@ public class DetectUnchangedLines {
 	private List<Integer> changedRight;
 	private Set<Integer> matchedRightIndices;
 
-	
 	/*
-	 * Purpose: Initializes the object with two files to compare the lines 
+	 * Purpose: Initializes the object with two files to compare the lines
 	 */
 	public DetectUnchangedLines(LineMapObject left, LineMapObject right) {
 		this.leftFile = left;
@@ -51,10 +48,10 @@ public class DetectUnchangedLines {
 		matchedRightIndices = new HashSet<>();
 	}
 
-/*
- * Pre:left file and right file
- * Purpose: Detects unchanged lines between the left and right hash matching and confidence checks
- */
+	/*
+	 * Pre:left file and right file Purpose: Detects unchanged lines between the
+	 * left and right hash matching and confidence checks
+	 */
 	public void findUnchanged() {
 
 		for (int i = 0; i < leftFile.GetSize(); i++) {
@@ -127,9 +124,9 @@ public class DetectUnchangedLines {
 
 		// anything in right-side not used is changed
 		for (int j = 0; j < rightFile.GetSize(); j++) {
-			if (!matchedRightIndices.contains(j)) { 
-	            changedRight.add(j);
-	        }
+			if (!matchedRightIndices.contains(j)) {
+				changedRight.add(j);
+			}
 		}
 	}
 
@@ -145,5 +142,4 @@ public class DetectUnchangedLines {
 		return changedRight;
 	}
 
-	
 }
