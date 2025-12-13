@@ -17,7 +17,7 @@ public class RunAllTests {
             System.out.println("Note: Need to add ground truth data for full analysis");
             System.out.println("See TeamDataAccuracyAnalyzer.java to add your mappings");
         }
-        
+        //as
         // Step 3: Show summary
         System.out.println("\n\n3. TEST SUITE COMPLETE");
         System.out.println("=".repeat(50));
